@@ -111,6 +111,31 @@ extension MainVC {
         }
     }
     
+    func updateUserData(username: UserName, updatedUsername: UserName) {
+        guard let appdelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        let manageContext = appdelegate.persistentContainer.viewContext
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
+        request.predicate = NSPredicate(format: "name = %@", username.name)
+        
+        do {
+            let update = try manageContext.fetch(request)
+            
+            let objectToUpdate = update[0] as! NSManagedObject
+            
+            objectToUpdate.setValue(updatedUsername.name, forKey: "name")
+            objectToUpdate.setValue(updatedUsername.age, forKey: "age")
+            self.fetchUserNameData()
+            do {
+                try manageContext.save()
+                self.tableView.reloadData()
+            } catch {
+                print(error)
+            }
+        } catch {
+            print(error)
+        }
+    }
+    
     func findTheIndex(name: String) -> Int {
         var count = 0
         for loop in userList {
@@ -142,12 +167,42 @@ extension MainVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let contextItem = UIContextualAction(style: .destructive, title: "delete") {  (contextualAction, view, boolValue) in
+        let contextItemDelete = UIContextualAction(style: .destructive, title: "delete") {  (contextualAction, view, boolValue) in
             //Code I want to do here
             let username = self.userList[indexPath.row]
             self.deleteUserNameData(username: username.name)
         }
-        let swipeActions = UISwipeActionsConfiguration(actions: [contextItem])
+        let contextItemUpdate = UIContextualAction(style: .destructive, title: "Update") {  (contextualAction, view, boolValue) in
+            //Code I want to do here
+            
+            
+            let alert = UIAlertController(title: "Adding Username", message: "Who is it?", preferredStyle: .alert)
+                    
+                    alert.addTextField { (textfield) in
+                        textfield.keyboardType = .default
+                        textfield.placeholder = "Enter Name"
+                    }
+                    alert.addTextField { (textfield) in
+                        textfield.keyboardType = .numberPad
+                        textfield.placeholder = "Enter Age"
+                    }
+                    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+                    alert.addAction(UIAlertAction(title: "Add", style: .default, handler: { (action) in
+                        let nameTxtField = alert.textFields?[0]
+                        let ageTxtField = alert.textFields?[1]
+                        
+            //            self.userList.append(UserName(name: nameTxtField?.text ?? "Anonymous", age: Int(ageTxtField?.text ?? "") ?? 0))
+//                        let usernameData : UserName = UserName(name: , age: Int(ageTxtField?.text ?? "") ?? 0)
+                        self.updateUserData(username: self.userList[indexPath.row], updatedUsername: UserName(name: nameTxtField?.text ?? "Anonymous", age: Int(ageTxtField?.text ?? "") ?? 0))
+                    }))
+                    
+                    self.present(alert, animated: true, completion: nil)
+            
+            
+//            let username = self.userList[indexPath.row]
+//            self.updateUserData(username: username)
+        }
+        let swipeActions = UISwipeActionsConfiguration(actions: [contextItemDelete, contextItemUpdate])
 
         return swipeActions
     }
