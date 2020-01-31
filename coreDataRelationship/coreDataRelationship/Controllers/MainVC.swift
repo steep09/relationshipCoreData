@@ -72,12 +72,12 @@ extension MainVC {
     
     func fetchUserNameData() {
         guard let appdelegate = UIApplication.shared.delegate as? AppDelegate else { return }
-                let managedContext = appdelegate.persistentContainer.viewContext
+                let manageContext = appdelegate.persistentContainer.viewContext
                 
                 let request = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
                 
                 do {
-                    let result = try managedContext.fetch(request)
+                    let result = try manageContext.fetch(request)
                     self.userList.removeAll()
                     for data in result as! [NSManagedObject] {
                         self.userList.append(UserName(name: data.value(forKey: "name") as! String, age: data.value(forKey: "age") as! Int))
@@ -150,6 +150,12 @@ extension MainVC: UITableViewDelegate, UITableViewDataSource {
         let swipeActions = UISwipeActionsConfiguration(actions: [contextItem])
 
         return swipeActions
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let sample = userList[indexPath.row]
+        
+        print("the name of the cell \(sample.name)")
     }
     
 }
